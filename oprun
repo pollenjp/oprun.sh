@@ -156,8 +156,12 @@ echo -e "${GREEN}Executing command with injected secrets...${NC}"
 # Using a subshell to avoid polluting the current environment
 (
 	# Export all the variables
-	export $(echo "$env_vars" | xargs)
+	key_value_pairs=()
+	while read -r line; do
+		key_value_pairs+=("$line")
+	done <<<"$env_vars"
+	export "${key_value_pairs[@]}"
 
-	# run the command 
-	exec $@    
+	# run the command
+	exec "$@"
 )
