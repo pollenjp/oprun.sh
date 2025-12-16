@@ -33,6 +33,8 @@ else
 	NC=''
 fi
 
+quiet_flag=0
+
 # Help message
 show_help() {
 	echo -e "
@@ -45,6 +47,7 @@ ${YELLOW}OPTIONS:${NC}
 	-e, --env-file FILE   Use specified env file (default: .env.template)
 	-h, --help            Show this help message
 	-v, --verbose         Show loaded environment variables (for debugging)
+	-q, --quiet           Suppress all output to stdout (escaping to stderr)
 
 ${YELLOW}EXAMPLES:${NC}
 	oprun npm run start
@@ -54,15 +57,28 @@ ${YELLOW}EXAMPLES:${NC}
 
 ${YELLOW}ENV FILE FORMAT:${NC}
 	Create a .env.template file with 1Password secret references:
-	
+
 	DATABASE_URL="op://vault-name/item-name/field-name"
 	API_KEY="op://student-services-prod/API Key: External Service/password"
-	
+
 ${YELLOW}SETUP:${NC}
 	1. Make sure 1Password CLI is installed and authenticated
 	2. Create a .env.template file in your project
 	3. Run: oprun your-command
 "
+}
+
+echo_stdout() {
+	(
+		if [[ ${quiet_flag:?} -eq 1 ]]; then
+			exec 1>&2
+		fi
+		echo -e "${1:?}"
+	)
+}
+
+echo_stderr() {
+	echo -e "${1:?}" >&2
 }
 
 # Parse command line arguments
@@ -81,13 +97,17 @@ while [[ $# -gt 0 ]]; do
 			VERBOSE=true
 			shift
 			;;
+		-q|--quiet)
+			quiet_flag=1
+			shift
+			;;
 		--)
 			shift
 			break
 			;;
 		-*)
-			echo -e "${RED}Error: Unknown option $1${NC}" >&2
-			echo "Use -h or --help for usage information" >&2
+			echo_stderr "${RED}Error: Unknown option $1${NC}"
+			echo_stderr "Use -h or --help for usage information"
 			exit 1
 			;;
 		*)
@@ -99,17 +119,17 @@ done
 
 # Check if we have a command to run
 if [[ $# -eq 0 ]]; then
-	echo -e "${RED}Error: No command specified${NC}" >&2
-	echo "Use -h or --help for usage information" >&2
+	echo_stderr "${RED}Error: No command specified${NC}"
+	echo_stderr "Use -h or --help for usage information"
 	exit 1
 fi
 
 # Check if env file exists
 if [[ ! -f "$ENV_FILE" ]]; then
-	echo -e "${RED}Error: Env file '$ENV_FILE' not found${NC}" >&2
-	echo -e "${YELLOW}Create an env file with your 1Password secret references:${NC}" >&2
-	echo 'DATABASE_URL="op://vault-name/item-name/field-name"' >&2
-	echo 'API_KEY="op://vault-name/item-name/password"' >&2
+	echo_stderr "${RED}Error: Env file '$ENV_FILE' not found${NC}"
+	echo_stderr "${YELLOW}Create an env file with your 1Password secret references:${NC}"
+	echo_stderr 'DATABASE_URL="op://vault-name/item-name/field-name"'
+	echo_stderr 'API_KEY="op://vault-name/item-name/password"'
 	exit 1
 fi
 
@@ -118,39 +138,39 @@ OP_CMD="op"
 if ! command -v op &> /dev/null; then
 	if command -v op.exe &> /dev/null; then
 		OP_CMD="op.exe"
-		echo -e "${YELLOW}Using Windows 1Password CLI (op.exe) from WSL${NC}"
+		echo_stdout "${YELLOW}Using Windows 1Password CLI (op.exe) from WSL${NC}"
 	else
-		echo -e "${RED}Error: 1Password CLI not found${NC}" >&2
-		echo "Tried: 'op' and 'op.exe'" >&2
-		echo "Please install 1Password CLI: https://developer.1password.com/docs/cli/get-started/" >&2
+		echo_stderr "${RED}Error: 1Password CLI not found${NC}"
+		echo_stderr "Tried: 'op' and 'op.exe'"
+		echo_stderr "Please install 1Password CLI: https://developer.1password.com/docs/cli/get-started/"
 		exit 1
 	fi
 fi
 
 # Check if user is signed in to 1Password
 if ! $OP_CMD account list &> /dev/null; then
-	echo -e "${RED}Error: Not signed in to 1Password${NC}" >&2
-	echo "Please run: $OP_CMD signin" >&2
+	echo_stderr "${RED}Error: Not signed in to 1Password${NC}"
+	echo_stderr "Please run: $OP_CMD signin"
 	exit 1
 fi
 
-echo -e "${BLUE}Loading secrets from $ENV_FILE...${NC}"
+echo_stdout "${BLUE}Loading secrets from $ENV_FILE...${NC}"
 
 # Inject secrets and capture the result
 if ! env_vars=$($OP_CMD inject -i "$ENV_FILE" 2>/dev/null); then
-	echo -e "${RED}Error: Failed to inject secrets from 1Password${NC}" >&2
-	echo "Check your env file and 1Password references" >&2
+	echo_stderr "${RED}Error: Failed to inject secrets from 1Password${NC}"
+	echo_stderr "Check your env file and 1Password references"
 	exit 1
 fi
 
 # Show loaded variables if verbose mode is enabled
 if [[ "$VERBOSE" == "true" ]]; then
-	echo -e "${GREEN}Loaded environment variables:${NC}"
-	echo "$env_vars" | sed 's/=.*/=***/' | sed 's/^/  /'
-	echo
+	echo_stdout -e "${GREEN}Loaded environment variables:${NC}"
+	echo_stdout "$env_vars" | sed 's/=.*/=***/' | sed 's/^/  /'
+	echo_stdout
 fi
 
-echo -e "${GREEN}Executing command with injected secrets...${NC}"
+echo_stdout -e "${GREEN}Executing command with injected secrets...${NC}"
 
 # Execute the command with injected environment variables
 # Using a subshell to avoid polluting the current environment
