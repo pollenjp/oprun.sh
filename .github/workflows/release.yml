@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build platform tarballs
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          mkdir -p dist staging
+          cp oprun staging/oprun
+          chmod +x staging/oprun
+
+          # oprun is a portable bash script; ship identical archives per
+          # platform so mise's GitHub backend autodetection picks them up.
+          for target in linux-x64 linux-arm64 linux-x86 macos-x64 macos-arm64; do
+            archive="dist/oprun-${tag}-${target}.tar.gz"
+            tar -czf "${archive}" -C staging oprun
+            (cd dist && sha256sum "$(basename "${archive}")") >> dist/SHA256SUMS
+          done
+
+          ls -la dist
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          gh release create "${tag}" \
+            --title "${tag}" \
+            --generate-notes \
+            dist/oprun-*.tar.gz dist/SHA256SUMS

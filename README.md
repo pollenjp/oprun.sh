@@ -32,7 +32,27 @@ curl -sSL https://raw.githubusercontent.com/MykalMachon/oprun.sh/main/oprun -o /
 chmod +x /usr/local/bin/oprun
 ```
 
-### Option 2: Manual Installation
+### Option 2: mise (via the GitHub backend)
+
+If you use [mise](https://mise.jdx.dev/), you can install `oprun` from the
+[GitHub backend](https://mise.jdx.dev/dev-tools/backends/github.html):
+
+```bash
+# Latest release
+mise use -g github:pollenjp/oprun.sh
+
+# Pinned version
+mise use -g github:pollenjp/oprun.sh@v0.1.0
+```
+
+Or in `mise.toml`:
+
+```toml
+[tools]
+"github:pollenjp/oprun.sh" = "latest"
+```
+
+### Option 3: Manual Installation
 
 1. Download the `oprun` script from this repository
 2. Place it in a directory that's in your `$PATH` (e.g., `/usr/local/bin` or `~/bin`)
