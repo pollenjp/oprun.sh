@@ -1,0 +1,15 @@
+[tools]
+shfmt = "latest"
+shellcheck = "latest"
+
+[tasks."lint:shfmt"]
+description = "Check shell script formatting with shfmt"
+run = "shfmt --diff oprun"
+
+[tasks."lint:shellcheck"]
+description = "Lint shell scripts with shellcheck"
+run = "shellcheck oprun"
+
+[tasks.lint]
+description = "Run all lint tasks"
+depends = ["lint:*"]
