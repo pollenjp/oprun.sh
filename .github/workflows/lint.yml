@@ -1,0 +1,19 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main-dev
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Run lint
+        run: mise run lint
