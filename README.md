@@ -24,15 +24,7 @@ Before using `oprun`, you'll need:
 
 ## Installation
 
-### Option 1: Direct Download (Recommended)
-
-```bash
-# Download and install oprun to /usr/local/bin
-curl -sSL https://raw.githubusercontent.com/MykalMachon/oprun.sh/main/oprun -o /usr/local/bin/oprun
-chmod +x /usr/local/bin/oprun
-```
-
-### Option 2: mise (via the GitHub backend)
+### Option 1: mise (Recommended)
 
 If you use [mise](https://mise.jdx.dev/), you can install `oprun` from the
 [GitHub backend](https://mise.jdx.dev/dev-tools/backends/github.html):
@@ -50,6 +42,14 @@ Or in `mise.toml`:
 ```toml
 [tools]
 "github:pollenjp/oprun.sh" = "latest"
+```
+
+### Option 2: Direct Download
+
+```bash
+# Download and install oprun to /usr/local/bin
+curl -sSL https://raw.githubusercontent.com/MykalMachon/oprun.sh/main/oprun -o /usr/local/bin/oprun
+chmod +x /usr/local/bin/oprun
 ```
 
 ### Option 3: Manual Installation
