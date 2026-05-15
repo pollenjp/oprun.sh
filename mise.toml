@@ -6,6 +6,10 @@ shellcheck = "latest"
 description = "Check shell script formatting with shfmt"
 run = "shfmt --diff oprun"
 
+[tasks."fmt:shfmt"]
+description = "Format shell scripts with shfmt"
+run = "shfmt --write oprun"
+
 [tasks."lint:shellcheck"]
 description = "Lint shell scripts with shellcheck"
 run = "shellcheck oprun"
