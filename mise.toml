@@ -4,11 +4,11 @@ shellcheck = "latest"
 
 [tasks."lint:shfmt"]
 description = "Check shell script formatting with shfmt"
-run = "shfmt --diff oprun"
+run = "shfmt -ci --diff oprun"
 
 [tasks."fmt:shfmt"]
 description = "Format shell scripts with shfmt"
-run = "shfmt --write oprun"
+run = "shfmt -ci --write oprun"
 
 [tasks."lint:shellcheck"]
 description = "Lint shell scripts with shellcheck"

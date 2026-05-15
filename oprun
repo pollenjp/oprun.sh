@@ -37,7 +37,7 @@ win_exe_flag=0
 
 # Help message
 show_help() {
-  echo -e "
+	echo -e "
 ${BLUE}oprun${NC} - 1Password inject wrapper (WSL-friendly op run alternative)
 
 ${YELLOW}USAGE:${NC}
@@ -86,19 +86,19 @@ echo_stderr() {
 VERBOSE=false
 while [[ $# -gt 0 ]]; do
 	case $1 in
-		-h|--help)
+		-h | --help)
 			show_help
 			exit 0
 			;;
-		-e|--env-file)
+		-e | --env-file)
 			ENV_FILE="$2"
 			shift 2
 			;;
-		-v|--verbose)
+		-v | --verbose)
 			VERBOSE=true
 			shift
 			;;
-		-q|--quiet)
+		-q | --quiet)
 			quiet_flag=1
 			shift
 			;;
@@ -140,9 +140,9 @@ fi
 
 # Check if op CLI is available, with fallback to op.exe (for WSL)
 OP_CMD="op"
-if [[ $win_exe_flag -eq 1 ]] || ! command -v op &> /dev/null; then
+if [[ $win_exe_flag -eq 1 ]] || ! command -v op &>/dev/null; then
 	OP_CMD="op.exe"
-	if command -v "${OP_CMD}" &> /dev/null; then
+	if command -v "${OP_CMD}" &>/dev/null; then
 		echo_stdout "${YELLOW}Using Windows 1Password CLI (op.exe) from WSL${NC}"
 	else
 		echo_stderr "${RED}Error: 1Password CLI not found${NC}"
@@ -153,7 +153,7 @@ if [[ $win_exe_flag -eq 1 ]] || ! command -v op &> /dev/null; then
 fi
 
 # Check if user is signed in to 1Password
-if ! $OP_CMD account list &> /dev/null; then
+if ! $OP_CMD account list &>/dev/null; then
 	echo_stderr "${RED}Error: Not signed in to 1Password${NC}"
 	echo_stderr "Please run: $OP_CMD signin"
 	exit 1
@@ -174,9 +174,9 @@ env_vars=$(echo "$env_vars" | sed '/^#/d' | sed '/^$/d')
 # Show loaded variables if verbose mode is enabled
 if [[ "$VERBOSE" == "true" ]]; then
 	echo_stdout -e "${GREEN}Loaded environment variables:${NC}"
-	echo "$env_vars" \
-		| sed 's/=.*/=***/' \
-		| sed 's/^/  /' >&2
+	echo "$env_vars" |
+		sed 's/=.*/=***/' |
+		sed 's/^/  /' >&2
 fi
 
 echo_stdout -e "${GREEN}Executing command with injected secrets...${NC}"
