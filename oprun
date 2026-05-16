@@ -12,24 +12,25 @@
 #   oprun -e secrets.env -- python manage.py runserver
 #   oprun -h
 
-set -e
+set -euo pipefail
+shopt -s inherit_errexit
 
 # Default values
 ENV_FILE=".env.template"
 
 # Color codes for output (only if terminal supports it)
 if [[ -t 1 ]] && [[ "${TERM:-}" != "dumb" ]]; then
-	RED='\033[0;31m'
-	GREEN='\033[0;32m'
-	YELLOW='\033[1;33m'
-	BLUE='\033[0;34m'
-	NC='\033[0m' # No Color
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[1;33m'
+  BLUE='\033[0;34m'
+  NC='\033[0m' # No Color
 else
-	RED=''
-	GREEN=''
-	YELLOW=''
-	BLUE=''
-	NC=''
+  RED=''
+  GREEN=''
+  YELLOW=''
+  BLUE=''
+  NC=''
 fi
 
 quiet_flag=0
@@ -70,113 +71,113 @@ ${YELLOW}SETUP:${NC}
 }
 
 echo_stdout() {
-	(
-		if [[ ${quiet_flag:?} -eq 1 ]]; then
-			exec 1>&2
-		fi
-		echo -e "${1}"
-	)
+  (
+    if [[ ${quiet_flag:?} -eq 1 ]]; then
+      exec 1>&2
+    fi
+    echo -e "${1}"
+  )
 }
 
 echo_stderr() {
-	echo -e "${1}" >&2
+  echo -e "${1}" >&2
 }
 
 # Parse command line arguments
 VERBOSE=false
 while [[ $# -gt 0 ]]; do
-	case $1 in
-		-h|--help)
-			show_help
-			exit 0
-			;;
-		-e|--env-file)
-			ENV_FILE="$2"
-			shift 2
-			;;
-		-v|--verbose)
-			VERBOSE=true
-			shift
-			;;
-		-q|--quiet)
-			quiet_flag=1
-			shift
-			;;
-		--win-exe)
-			win_exe_flag=1
-			shift
-			;;
-		--)
-			shift
-			break
-			;;
-		-*)
-			echo_stderr "${RED}Error: Unknown option $1${NC}"
-			echo_stderr "Use -h or --help for usage information"
-			exit 1
-			;;
-		*)
-			# First non-option argument, assume it's the start of the command
-			break
-			;;
-	esac
+  case $1 in
+    -h | --help)
+      show_help
+      exit 0
+      ;;
+    -e | --env-file)
+      ENV_FILE="$2"
+      shift 2
+      ;;
+    -v | --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    -q | --quiet)
+      quiet_flag=1
+      shift
+      ;;
+    --win-exe)
+      win_exe_flag=1
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo_stderr "${RED}Error: Unknown option $1${NC}"
+      echo_stderr "Use -h or --help for usage information"
+      exit 1
+      ;;
+    *)
+      # First non-option argument, assume it's the start of the command
+      break
+      ;;
+  esac
 done
 
 # Check if we have a command to run
 if [[ $# -eq 0 ]]; then
-	echo_stderr "${RED}Error: No command specified${NC}"
-	echo_stderr "Use -h or --help for usage information"
-	exit 1
+  echo_stderr "${RED}Error: No command specified${NC}"
+  echo_stderr "Use -h or --help for usage information"
+  exit 1
 fi
 
 # Check if env file exists
-if [[ ! -f "$ENV_FILE" ]]; then
-	echo_stderr "${RED}Error: Env file '$ENV_FILE' not found${NC}"
-	echo_stderr "${YELLOW}Create an env file with your 1Password secret references:${NC}"
-	echo_stderr 'DATABASE_URL="op://vault-name/item-name/field-name"'
-	echo_stderr 'API_KEY="op://vault-name/item-name/password"'
-	exit 1
+if [[ ! -f "${ENV_FILE}" ]]; then
+  echo_stderr "${RED}Error: Env file '${ENV_FILE}' not found${NC}"
+  echo_stderr "${YELLOW}Create an env file with your 1Password secret references:${NC}"
+  echo_stderr 'DATABASE_URL="op://vault-name/item-name/field-name"'
+  echo_stderr 'API_KEY="op://vault-name/item-name/password"'
+  exit 1
 fi
 
 # Check if op CLI is available, with fallback to op.exe (for WSL)
-OP_CMD="op"
-if [[ $win_exe_flag -eq 1 ]] || ! command -v op &> /dev/null; then
-	OP_CMD="op.exe"
-	if command -v "${OP_CMD}" &> /dev/null; then
-		echo_stdout "${YELLOW}Using Windows 1Password CLI (op.exe) from WSL${NC}"
-	else
-		echo_stderr "${RED}Error: 1Password CLI not found${NC}"
-		echo_stderr "Tried: 'op' and 'op.exe'"
-		echo_stderr "Please install 1Password CLI: https://developer.1password.com/docs/cli/get-started/"
-		exit 1
-	fi
+op_cmd_0="op"
+if [[ ${win_exe_flag} -eq 1 ]] || ! command -v op &>/dev/null; then
+  op_cmd_0="op.exe"
+  if command -v "${op_cmd_0}" &>/dev/null; then
+    echo_stdout "${YELLOW}Using Windows 1Password CLI (op.exe) from WSL${NC}"
+  else
+    echo_stderr "${RED}Error: 1Password CLI not found${NC}"
+    echo_stderr "Tried: 'op' and 'op.exe'"
+    echo_stderr "Please install 1Password CLI: https://developer.1password.com/docs/cli/get-started/"
+    exit 1
+  fi
 fi
 
 # Check if user is signed in to 1Password
-if ! $OP_CMD account list &> /dev/null; then
-	echo_stderr "${RED}Error: Not signed in to 1Password${NC}"
-	echo_stderr "Please run: $OP_CMD signin"
-	exit 1
+if ! "${op_cmd_0}" account list &>/dev/null; then
+  echo_stderr "${RED}Error: Not signed in to 1Password${NC}"
+  echo_stderr "Please run: ${op_cmd_0} signin"
+  exit 1
 fi
 
-echo_stdout "${BLUE}Loading secrets from $ENV_FILE...${NC}"
+echo_stdout "${BLUE}Loading secrets from ${ENV_FILE}...${NC}"
 
 # Inject secrets and capture the result
-if ! env_vars=$($OP_CMD inject -i "$ENV_FILE" 2>/dev/null); then
-	echo_stderr "${RED}Error: Failed to inject secrets from 1Password${NC}"
-	echo_stderr "Check your env file and 1Password references"
-	exit 1
+if ! env_vars=$("${op_cmd_0}" inject -i "${ENV_FILE}" 2>/dev/null); then
+  echo_stderr "${RED}Error: Failed to inject secrets from 1Password${NC}"
+  echo_stderr "Check your env file and 1Password references"
+  exit 1
 fi
 
 # Remove comment lines (starting with #) and empty lines
-env_vars=$(echo "$env_vars" | sed '/^#/d' | sed '/^$/d')
+env_vars=$(echo "${env_vars}" | sed '/^#/d' | sed '/^$/d')
 
 # Show loaded variables if verbose mode is enabled
-if [[ "$VERBOSE" == "true" ]]; then
-	echo_stdout -e "${GREEN}Loaded environment variables:${NC}"
-	echo "$env_vars" \
-		| sed 's/=.*/=***/' \
-		| sed 's/^/  /' >&2
+if [[ "${VERBOSE}" == "true" ]]; then
+  echo_stdout -e "${GREEN}Loaded environment variables:${NC}"
+  echo "${env_vars}" \
+    | sed 's/=.*/=***/' \
+    | sed 's/^/  /' >&2
 fi
 
 echo_stdout -e "${GREEN}Executing command with injected secrets...${NC}"
@@ -184,13 +185,13 @@ echo_stdout -e "${GREEN}Executing command with injected secrets...${NC}"
 # Execute the command with injected environment variables
 # Using a subshell to avoid polluting the current environment
 (
-	# Export all the variables
-	key_value_pairs=()
-	while read -r line; do
-		key_value_pairs+=("$line")
-	done <<<"$env_vars"
-	export "${key_value_pairs[@]}"
+  # Export all the variables
+  key_value_pairs=()
+  while read -r line; do
+    key_value_pairs+=("${line}")
+  done <<<"${env_vars}"
+  export "${key_value_pairs[@]}"
 
-	# run the command
-	exec "$@"
+  # run the command
+  exec "$@"
 )

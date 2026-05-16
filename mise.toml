@@ -1,0 +1,23 @@
+[tools]
+shfmt = "3.13.1"
+shellcheck = "0.11.0"
+
+[tasks."lint:shfmt"]
+description = "Check shell script formatting with shfmt"
+run = "shfmt --diff oprun"
+
+[tasks."fmt:shfmt"]
+description = "Format shell scripts with shfmt"
+run = "shfmt --write oprun"
+
+[tasks."lint:shellcheck"]
+description = "Lint shell scripts with shellcheck"
+run = "shellcheck oprun"
+
+[tasks.lint]
+description = "Run all lint tasks"
+depends = ["lint:*"]
+
+[tasks.fmt]
+description = "Run all fmt tasks"
+depends = ["fmt:*"]
