@@ -17,3 +17,7 @@ run = "shellcheck oprun"
 [tasks.lint]
 description = "Run all lint tasks"
 depends = ["lint:*"]
+
+[tasks.fmt]
+description = "Run all fmt tasks"
+depends = ["fmt:*"]
