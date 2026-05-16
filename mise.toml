@@ -1,6 +1,6 @@
 [tools]
-shfmt = "latest"
-shellcheck = "latest"
+shfmt = "3.13.1"
+shellcheck = "0.11.0"
 
 [tasks."lint:shfmt"]
 description = "Check shell script formatting with shfmt"
