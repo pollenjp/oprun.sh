@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/pollenjp/oprun.sh/compare/v0.2.0...v0.3.0) (2026-05-16)
+
+
+### Features
+
+* trigger release-please PR ([#13](https://github.com/pollenjp/oprun.sh/issues/13)) ([237806e](https://github.com/pollenjp/oprun.sh/commit/237806e3bbcc9100acd1d64048aebf72179d1b8e))
+
 ## [0.2.0](https://github.com/pollenjp/oprun.sh/compare/v0.1.0...v0.2.0) (2026-05-03)
 
 
